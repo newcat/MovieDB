@@ -19,12 +19,14 @@ app.get("/movies", async (req, res) => {
     try {
 
         let rows = [];
+        let query = "SELECT movie_id, title, genre FROM movies NATURAL JOIN movies_actors NATURAL JOIN actors";
+        const conditions = [];
+        const // todo
+        
 
         if (req.query.searchactor) {
             const qr = await client.query(`
-                SELECT movie_id, title, genre FROM movies
-                NATURAL JOIN movies_actors
-                NATURAL JOIN actors
+                
                 WHERE metaphone(name, 6) = metaphone($1, 6);
             `, [req.query.searchactor]);
             rows = qr.rows;

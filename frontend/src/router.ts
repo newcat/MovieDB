@@ -1,6 +1,7 @@
 import Vue from "vue";
 import Router from "vue-router";
 import Movies from "./views/Movies.vue";
+import Search from "./views/Search.vue";
 
 Vue.use(Router);
 
@@ -8,8 +9,8 @@ export default new Router({
   routes: [
     {
       path: "/",
-      name: "movies",
-      component: Movies
+      name: "search",
+      component: Search
     },
     {
       path: "/movie/:id",

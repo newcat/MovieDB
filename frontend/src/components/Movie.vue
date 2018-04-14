@@ -13,7 +13,7 @@ import { IMovie } from "../interfaces/IMovie";
 export default class Movie extends Vue {
 
     @Prop()
-    public movieData: IMovie
+    public movieData!: IMovie
 
 }
 </script>

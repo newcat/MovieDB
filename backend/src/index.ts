@@ -1,8 +1,10 @@
+import * as cors from "cors";
 import * as express from "express";
 import * as fuse from "fuse.js";
 import * as pg from "pg";
 
 const app = express();
+app.use(cors());
 
 const client = new pg.Client({
     host: "localhost",
@@ -20,28 +22,35 @@ app.get("/movies", async (req, res) => {
 
         let rows = [];
         let query = "SELECT movie_id, title, genre FROM movies NATURAL JOIN movies_actors NATURAL JOIN actors";
-        const conditions = [];
-        const // todo
-        
+        const conditions: string[] = [];
+        const options = (req.query.options as string).split(",");
+        const byactor = req.query.byactor === "true" || false;
+        const bytitle = req.query.bytitle === "true" || false;
 
-        if (req.query.searchactor) {
-            const qr = await client.query(`
-                
-                WHERE metaphone(name, 6) = metaphone($1, 6);
-            `, [req.query.searchactor]);
-            rows = qr.rows;
-        } else if (req.query.searchtitle) {
-            const qr = await client.query(`
-                SELECT movie_id, title, genre FROM movies
-                WHERE metaphone(title, 6) = metaphone($1, 6);
-            `, [req.query.searchtitle]);
-            rows = qr.rows;
-        } else {
-            const qr = await client.query("SELECT movie_id, title, genre FROM movies");
-            rows = qr.rows;
+        const addCond = (name: string, q: string) => {
+            if (options.indexOf(name) >= 0) {
+                if (byactor) { conditions.push(q.replace("$$", "name")); }
+                if (bytitle) { conditions.push(q.replace("$$", "title")); }
+            }
+        };
+        addCond("ILIKE", "$$ ILIKE $1");
+        addCond("RegEx", "$$ ~* $1");
+        addCond("Levenshtein", "levenshtein(lower($$), lower($1)) <= 3");
+        addCond("Trigram", "$$ % $1");
+        addCond("Fulltext", "$$ @@ $1");
+        addCond("Metaphone", "metaphone($$, 6) = metaphone($1, 6)");
+
+        // build the query
+        if (conditions.length > 0) {
+            query += " WHERE " + conditions.join(" OR ");
         }
+        query += " GROUP BY movie_id";
+        console.log(query);
 
-        if (req.query.searchfuzzy) {
+        const qr = await client.query(query, conditions.length > 0 ? [req.query.q] : undefined);
+        rows = qr.rows;
+
+        if (options.indexOf("Fuse") >= 0) {
             const f = new fuse(rows, {
                 shouldSort: true,
                 threshold: 0.3,
@@ -51,7 +60,7 @@ app.get("/movies", async (req, res) => {
                 minMatchCharLength: 1,
                 keys: [ "title" ]
             });
-            rows = f.search(req.query.searchfuzzy);
+            rows = f.search(req.query.q);
         }
 
         res.status(200).json(rows);

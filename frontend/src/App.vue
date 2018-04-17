@@ -2,7 +2,7 @@
     <v-app>
 
         <v-toolbar color="indigo" dark fixed app>
-            <v-toolbar-title>MovieDB</v-toolbar-title>
+            <v-toolbar-title @click="$router.push({name:'search'})" style="cursor: pointer;">MovieDB</v-toolbar-title>
         </v-toolbar>
 
         <v-content>

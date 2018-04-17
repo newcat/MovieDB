@@ -7,8 +7,8 @@
     >
         <template slot="items" slot-scope="props">
             <td>{{ props.item.movie_id }}</td>
-            <td><a href="#" @click="onMovieClick(props.item.movie_id)">{{ props.item.title }}</a></td>
-            <td>{{ props.item.genre }}</td>
+            <td><a href="javascript:void(0)" @click="onMovieClick(props.item.movie_id)">{{ props.item.title }}</a></td>
+            <td>{{ Object.keys(props.item.genre).join(", ") }}</td>
         </template>
         <template slot="no-data">
             <v-alert type="info" value="true" class="mt-3 mb-3">
@@ -49,7 +49,7 @@ export default class MovieList extends Vue {
     @Prop()
     public loading!: boolean;
 
-    onMovieClick(movie_id) {
+    onMovieClick(movie_id: string) {
         this.$router.push({
             name: "movie",
             params: { id: movie_id }

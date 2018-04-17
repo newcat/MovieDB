@@ -16,6 +16,25 @@ client.connect()
     .then(() => console.log("Connected to database."))
     .catch((err) => console.log("Failed to connect to db: " + err));
 
+const names: string[] = [];
+async function getGenres(vector: string): Promise<{ [name: string]: number }> {
+
+    if (names.length === 0) {
+        const qr = await client.query("SELECT * FROM genres");
+        qr.rows.forEach((r) => { names[r.position - 1] = r.name; });
+    }
+
+    // parse the vector
+    const values = vector.substr(1, vector.length - 2).split(",").map((s) => s.trim());
+    const ret: { [name: string]: number } = {};
+    values.forEach((v, i) => {
+        const n = Number.parseInt(v);
+        if (n > 0) { ret[names[i]] = n; }
+    });
+    return ret;
+
+}
+
 app.get("/movies", async (req, res) => {
 
     try {
@@ -63,6 +82,9 @@ app.get("/movies", async (req, res) => {
             rows = f.search(req.query.q);
         }
 
+        for (const r of rows) {
+            r.genre = await getGenres(r.genre);
+        }
         res.status(200).json(rows);
 
     } catch (err) {
@@ -77,12 +99,22 @@ app.get("/movies/:id", async (req, res) => {
     if (qr.rowCount <= 0) { return res.status(404).end(); }
 
     const ret = qr.rows[0];
+    const vec = ret.genre;
+    ret.genre = await getGenres(ret.genre);
     qr = await client.query(`
         SELECT actor_id, name FROM actors
         NATURAL JOIN movies_actors
         WHERE movie_id = $1
     `, [req.params.id]);
     ret.actors = qr.rows;
+
+    qr = await client.query(`
+        SELECT movie_id, title FROM movies
+        WHERE cube_enlarge($1, 5, 18) @> genre AND movie_id <> $2
+        ORDER BY cube_distance(genre, $1)
+        LIMIT 10
+    `, [vec, ret.movie_id]);
+    ret.similar = qr.rows;
 
     res.status(200).json(ret);
 

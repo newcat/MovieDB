@@ -83,7 +83,7 @@ export default class Search extends Vue {
     public searchOnMovies = true;
     public searchOnActors = false;    
     public searchFor = "movies";
-    public selectedSearchOptions = ["Metaphone"];
+    public selectedSearchOptions = ["RegEx"];
     public searchQuery = "";
 
     public resultType = "movies";

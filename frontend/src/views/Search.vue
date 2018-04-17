@@ -12,14 +12,24 @@
                                     <v-text-field name="search" label="Search" v-model="searchQuery" />
                                 </v-flex>
                             </v-layout>
-                        
+
+                            <v-layout row wrap>
+                                <v-flex xs12>Search for</v-flex>
+                                <v-flex xs12>
+                                    <v-radio-group v-model="searchFor" row>
+                                        <v-radio label="Movies" value="movies"></v-radio>
+                                        <v-radio label="Actors" value="actors"></v-radio>
+                                    </v-radio-group>
+                                </v-flex>
+                            </v-layout>
+
                             <v-layout row wrap>
                                 <v-flex xs12>Search on</v-flex>
                                 <v-flex xs12 sm6 lg4>
-                                    <v-checkbox label="Movies" v-model="searchMovies"></v-checkbox>
+                                    <v-checkbox label="Movies" v-model="searchOnMovies"></v-checkbox>
                                 </v-flex>
                                 <v-flex xs12 sm6 lg4>
-                                    <v-checkbox label="Actors" v-model="searchActors"></v-checkbox>
+                                    <v-checkbox label="Actors" v-model="searchOnActors"></v-checkbox>
                                 </v-flex>
                             </v-layout>
 
@@ -38,7 +48,8 @@
 
         <v-layout row justify-space-around class="mt-3">
             <v-flex xs12 lg8>
-                <movie-list :movies="movies" :loading="loading"></movie-list>
+                <movie-list v-if="resultType == 'movies'" :movies="results" :loading="loading"></movie-list>
+                <actor-list v-if="resultType == 'actors'" :actors="results" :loading="loading"></actor-list>
             </v-flex>
         </v-layout>
 
@@ -48,11 +59,13 @@
 <script lang="ts">
 import { Component, Vue, Watch } from "vue-property-decorator";
 import MovieList from "@/components/MovieList.vue";
+import ActorList from "@/components/ActorList.vue";
 import Request from "../request";
 
 @Component({
     components: {
-        MovieList
+        MovieList,
+        ActorList
     }
 })
 export default class Search extends Vue {
@@ -67,32 +80,39 @@ export default class Search extends Vue {
         "Fuse"
     ];
 
-    public searchMovies = true;
-    public searchActors = false;    
+    public searchOnMovies = true;
+    public searchOnActors = false;    
+    public searchFor = "movies";
     public selectedSearchOptions = ["Metaphone"];
     public searchQuery = "";
 
-    public movies = [];
+    public resultType = "movies";
+    public results = [];
     public loading = false;
 
-    @Watch('searchMovies')
-    @Watch('searchActors')
+    @Watch('searchOnMovies')
+    @Watch('searchOnActors')
     @Watch('selectedSearchOptions')
     @Watch('searchQuery')
+    @Watch('searchFor')
     private async search() {
 
+        if (this.loading) { return; }
         this.loading = true;
         
         try {
-            const res = await Request.get("/movies", {
+            const type = this.searchFor;
+            const res = await Request.get(
+                this.searchFor === "movies" ? "/movies" : "/actors", {
                 params: {
                     options: this.selectedSearchOptions.join(),
                     q: this.searchQuery,
-                    bytitle: this.searchMovies,
-                    byactor: this.searchActors
+                    bytitle: this.searchOnMovies,
+                    byactor: this.searchOnActors
                 }
             });
-            this.movies = res.data;
+            this.resultType = type;
+            this.results = res.data;
         } catch(e) {
             console.log(e);
         }

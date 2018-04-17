@@ -1,14 +1,13 @@
 <template>
     <v-data-table
         :headers="headerDefinitions"
-        :items="movies"
+        :items="actors"
         :disable-initial-sort="true"
         :loading="loading"
     >
         <template slot="items" slot-scope="props">
-            <td>{{ props.item.movie_id }}</td>
-            <td><a href="#" @click="onMovieClick(props.item.movie_id)">{{ props.item.title }}</a></td>
-            <td>{{ props.item.genre }}</td>
+            <td>{{ props.item.actor_id }}</td>
+            <td>{{ props.item.name }}</td>
         </template>
         <template slot="no-data">
             <v-alert type="info" value="true" class="mt-3 mb-3">
@@ -28,33 +27,21 @@ export default class MovieList extends Vue {
     public headerDefinitions = [
         {
             text: "ID",
-            value: "movie_id",
+            value: "actor_id",
             sortable: true
         },
         {
-            text: "Title",
-            value: "title",
+            text: "Name",
+            value: "name",
             sortable: true
-        },
-        {
-            text: "Genres",
-            value: "genres",
-            sortable: false
         }
     ];
 
     @Prop()
-    public movies!: IMovie[];
+    public actors!: any[];
 
     @Prop()
     public loading!: boolean;
-
-    onMovieClick(movie_id) {
-        this.$router.push({
-            name: "movie",
-            params: { id: movie_id }
-        });
-    }
 
 }
 </script>

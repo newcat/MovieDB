@@ -1,6 +1,6 @@
 import Vue from "vue";
 import Router from "vue-router";
-import Movies from "./views/Movies.vue";
+import Movie from "./views/Movie.vue";
 import Search from "./views/Search.vue";
 
 Vue.use(Router);
@@ -14,8 +14,8 @@ export default new Router({
     },
     {
       path: "/movie/:id",
-      name: "moviedetail",
-      component: undefined // todo
+      name: "movie",
+      component: Movie
     },
     {
       path: "/actor/:id",
